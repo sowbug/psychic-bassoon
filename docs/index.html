@@ -49,6 +49,7 @@ var onload = function() {
   var e = document.getElementById("more");
   e.addEventListener("click", generatePassphrases);
   generatePassphrases();
+  e.style.display = "block";
 };
 
 window.addEventListener("load", onload);
@@ -70,7 +71,7 @@ window.addEventListener("load", onload);
 
 <div id="passphrases"></div>
 <p>
-  <button id="more">I'm Feeling Lucky</button>
+  <button id="more" style="display:none">I'm Feeling Lucky</button>
 </p>
 
 </html>
