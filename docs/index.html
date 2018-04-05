@@ -11,12 +11,14 @@
 </style>
   
 <script type="text/javascript">
+
 function generateOnePassphrase(n) {
   var p = "";
   
   // base58 is [a-zA-Z0-9] except for
   // 0 (zero), O (capital o), I (capital i) and l (lower case L)
   var re = /[a-km-np-zA-HJ-NP-Z1-9]/;
+
   while (p.length < n) {
     var array = new Uint8Array(1);
     window.crypto.getRandomValues(array);
@@ -25,14 +27,20 @@ function generateOnePassphrase(n) {
       p += c;
     }
   }
+
   return p;
 }
 
 var generatePassphrases = function() {
   var e = document.getElementById("passphrases");
   var passphrases = [];
-  for (i = 0; i < 32; i++) {
-    passphrases.push("<div>" + generateOnePassphrase(22) + "</div>");
+  for (i = 0; i < 8; i++) {
+    passphrases.push("<div>" +
+                     generateOnePassphrase(22) + " " +
+                     generateOnePassphrase(22) + " " +
+                     generateOnePassphrase(22) + " " +
+                     generateOnePassphrase(22) + 
+                     "</div>");
   }
   e.innerHTML = passphrases.join("\n");
 };
@@ -50,8 +58,9 @@ window.addEventListener("load", generatePassphrases);
     for yourself, confirm it's safe, and download your own local copy.</p>
 
   <p>Each passphrase consists of <a href="https://en.wikipedia.org/wiki/Base58">Base58 characters</a> and is 22 characters
-    long. That should get you over 128 bits of entropy (58 log base 2 = about 5.85, 5.85 x 22 = 128.7), which is more than
-    enough to withstand offline brute-forcing.</p>
+    long. That should get you over 128 bits of entropy (58 log base 2 = about 5.85, 5.85 x 22 = 128.7), which is
+    <a href="https://en.wikipedia.org/wiki/Key_size#Symmetric_algorithm_key_lengths">more than
+    enough for any practical purpose</a>.</p>
 
 <div id="passphrases"></div>
 
