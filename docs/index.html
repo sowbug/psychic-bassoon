@@ -31,7 +31,7 @@ function generateOnePassphrase(n) {
   return p;
 }
 
-var generatePassphrases = function() {
+function generatePassphrases() {
   var e = document.getElementById("passphrases");
   var passphrases = [];
   for (i = 0; i < 8; i++) {
@@ -39,13 +39,19 @@ var generatePassphrases = function() {
                      generateOnePassphrase(22) + " " +
                      generateOnePassphrase(22) + " " +
                      generateOnePassphrase(22) + " " +
-                     generateOnePassphrase(22) + 
+                     generateOnePassphrase(22) +
                      "</div>");
   }
   e.innerHTML = passphrases.join("\n");
+}
+
+var onload = function() {
+  var e = document.getElementById("more");
+  e.addEventListener("click", generatePassphrases);
+  generatePassphrases();
 };
 
-window.addEventListener("load", generatePassphrases);
+window.addEventListener("load", onload);
 </script>
 
 </head>
@@ -63,5 +69,8 @@ window.addEventListener("load", generatePassphrases);
     enough for any practical purpose</a>.</p>
 
 <div id="passphrases"></div>
+<p>
+  <button id="more">I'm Feeling Lucky</button>
+</p>
 
 </html>
