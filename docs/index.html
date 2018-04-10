@@ -3,6 +3,7 @@
 <head>
 
   <title>Psychic Bassoon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style type="text/css">
   body, button {
@@ -16,33 +17,40 @@
 <script type="text/javascript">
 
 function generateOnePassphrase(n) {
-  var p = "";
-
   // base58 is [a-zA-Z0-9] except for
   // 0 (zero), O (capital o), I (capital i) and l (lower case L)
-  var re = /[a-km-np-zA-HJ-NP-Z1-9]/;
+  const re = /[a-km-np-zA-HJ-NP-Z1-9]/;
+
+  const a = new Uint8Array(32);
+  var p = "";
 
   while (p.length < n) {
-    var array = new Uint8Array(1);
-    window.crypto.getRandomValues(array);
-    const c = String.fromCharCode.apply(null, array);
-    if (c.match(re)) {
-      p += c;
+    window.crypto.getRandomValues(a);
+    var s = String.fromCharCode.apply(null, a);
+    var i = 0;
+    while (p.length < n && i < s.length) {
+      var c = s[i++];
+      if (c.match(re)) {
+	p += c;
+      }
     }
   }
 
   return p;
 }
 
+const DESIRED_BITS_OF_ENTROPY = 128;
+const BITS_OF_ENTROPY_IN_BASE58 = Math.log(58) / Math.log(2);
+const PASSPHRASE_LEN = Math.ceil(DESIRED_BITS_OF_ENTROPY / BITS_OF_ENTROPY_IN_BASE58);
 function generatePassphrases() {
   var e = document.getElementById("passphrases");
   var passphrases = [];
   for (i = 0; i < 8; i++) {
     passphrases.push("<div>" +
-                     generateOnePassphrase(22) + " " +
-                     generateOnePassphrase(22) + " " +
-                     generateOnePassphrase(22) + " " +
-                     generateOnePassphrase(22) +
+                     generateOnePassphrase(PASSPHRASE_LEN) + " " +
+                     generateOnePassphrase(PASSPHRASE_LEN) + " " +
+                     generateOnePassphrase(PASSPHRASE_LEN) + " " +
+                     generateOnePassphrase(PASSPHRASE_LEN) +
                      "</div>");
   }
   e.innerHTML = passphrases.join("\n");
