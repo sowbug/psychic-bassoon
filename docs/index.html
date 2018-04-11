@@ -41,19 +41,26 @@ function generateOnePassphrase(n) {
 
 const DESIRED_BITS_OF_ENTROPY = 128;
 const BITS_OF_ENTROPY_IN_BASE58 = Math.log(58) / Math.log(2);
-const PASSPHRASE_LEN = Math.ceil(DESIRED_BITS_OF_ENTROPY / BITS_OF_ENTROPY_IN_BASE58);
+const PASSPHRASE_LEN = Math.ceil(DESIRED_BITS_OF_ENTROPY /
+                                 BITS_OF_ENTROPY_IN_BASE58);
 function generatePassphrases() {
   var e = document.getElementById("passphrases");
+  while (e.hasChildNodes()) {
+    e.removeChild(e.firstChild);
+  }
   var passphrases = [];
   for (i = 0; i < 8; i++) {
-    passphrases.push("<div>" +
-                     generateOnePassphrase(PASSPHRASE_LEN) + " " +
-                     generateOnePassphrase(PASSPHRASE_LEN) + " " +
-                     generateOnePassphrase(PASSPHRASE_LEN) + " " +
-                     generateOnePassphrase(PASSPHRASE_LEN) +
-                     "</div>");
+    var d = document.createElement("div");
+    for (j = 0; j < 4; j++) {
+      var span = document.createElement("span");
+      span.innerText = generateOnePassphrase(PASSPHRASE_LEN);
+      d.appendChild(span);
+      span = document.createElement("span");
+      span.innerText = " ";
+      d.appendChild(span);
+    }
+    e.appendChild(d);
   }
-  e.innerHTML = passphrases.join("\n");
 }
 
 var onload = function() {
