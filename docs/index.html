@@ -12,6 +12,9 @@
   #passphrases {
     font-family: courier;
   }
+  .pp {
+    display: inline-block;
+  }
 </style>
 
 <script type="text/javascript">
@@ -31,7 +34,7 @@ function generateOnePassphrase(n) {
     while (p.length < n && i < s.length) {
       var c = s[i++];
       if (c.match(re)) {
-	p += c;
+        p += c;
       }
     }
   }
@@ -52,10 +55,11 @@ function generatePassphrases() {
   for (i = 0; i < 8; i++) {
     var d = document.createElement("div");
     for (j = 0; j < 4; j++) {
+      var innerDiv = document.createElement("div");
+      innerDiv.className = "pp";
+      innerDiv.innerText = generateOnePassphrase(PASSPHRASE_LEN);
+      d.appendChild(innerDiv);
       var span = document.createElement("span");
-      span.innerText = generateOnePassphrase(PASSPHRASE_LEN);
-      d.appendChild(span);
-      span = document.createElement("span");
       span.innerText = " ";
       d.appendChild(span);
     }
