@@ -1,132 +1,172 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
   <title>Psychic Bassoon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style type="text/css">
-  body, button {
-    font-family: helvetica;
-  }
-  .pblock {
-    font-family: "courier new";
-    font-size: 24px;
-    font-weight: bold;
-  }
-  .pp {
-    border: 1px solid #ccc;
-    margin: 2px;
-    border-collapse: collapse;
-    display: inline-block;
-    padding: 4px;
-  }
-</style>
+  <style type="text/css">
+    body,
+    button {
+      font-family: "helvetica";
+    }
 
-<script type="text/javascript">
+    .pblock {
+      font-family: "courier new";
+      font-size: 24px;
+      font-weight: bold;
+    }
 
-function generateOnePassphrase(n) {
-  // base58 is [a-zA-Z0-9] except for
-  // 0 (zero), O (capital o), I (capital i) and l (lower case L)
-  const re = /[a-km-np-zA-HJ-NP-Z1-9]/;
+    .pp {
+      border: 1px solid #ccc;
+      margin: 2px;
+      display: inline-block;
+      padding: 4px;
+    }
+  </style>
 
-  const a = new Uint8Array(32);
-  var p = "";
+  <script type="text/javascript">
 
-  while (p.length < n) {
-    window.crypto.getRandomValues(a);
-    var s = String.fromCharCode.apply(null, a);
-    var i = 0;
-    while (p.length < n && i < s.length) {
-      var c = s[i++];
-      if (c.match(re)) {
-        p += c;
+    const PASSPHRASE = 0;
+    const PASSPHRASE_LOWER = 1;
+    const PIN = 2;
+    const PASSPHRASE_WITH_CHARACTERS = 3;
+    function generateOnePassphrase(length, passphrase_type) {
+
+      // base58 is [a-zA-Z0-9] except for
+      // 0 (zero), O (capital o), I (capital i) and l (lower case L)
+      const re_letters = /[a-km-np-zA-HJ-NP-Z1-9]/;
+      const re_lower = /[a-z0-9]/;
+      const re_num_only = /[0-9]/;
+      const re_special = /[a-zA-Z!@#$%^&*_+-={}|;:'"<>,]/;
+      var re;
+      if (passphrase_type == PASSPHRASE) {
+        re = re_letters;
+      } else if (passphrase_type == PASSPHRASE_LOWER) {
+        re = re_lower;
+      } else if (passphrase_type == PIN) {
+        re = re_num_only;
+      } else if (passphrase_type == PASSPHRASE_WITH_CHARACTERS) {
+        re = re_special;
+      } else {
+        throw "Unknown passphrase type: " + passphrase_type + ". Expected values are 0 (PASSPHRASE), 1 (PASSPHRASE_LOWER), 2 (PIN), or 3 (PASSPHRASE_WITH_CHARACTERS).";
+      }
+
+      const a = new Uint8Array(32);
+      var p = "";
+
+      while (p.length < length) {
+        window.crypto.getRandomValues(a);
+        var s = "";
+        for (let i = 0; i < a.length; i++) {
+          s += String.fromCharCode(a[i]);
+        }
+        var i = 0;
+        while (p.length < length && i < s.length) {
+          var c = s[i++];
+          if (c.match(re)) {
+            p += c;
+          }
+        }
+      }
+
+      return p;
+    }
+
+    const DESIRED_BITS_OF_ENTROPY = 128;
+    const BITS_OF_ENTROPY_IN_BASE58 = Math.log(58) / Math.log(2);
+    const PASSPHRASE_LEN = Math.ceil(DESIRED_BITS_OF_ENTROPY /
+      BITS_OF_ENTROPY_IN_BASE58);
+    const SHORT_PASSPHRASE_LEN = 8;
+
+    function generatePassphrases(id, length, passphrase_type) {
+      var e = document.getElementById(id);
+      while (e.hasChildNodes()) {
+        e.removeChild(e.firstChild);
+      }
+      var passphrases = [];
+      for (let i = 0; i < 2; i++) {
+        var d = document.createElement("div");
+        for (let j = 0; j < 2; j++) {
+          var innerDiv = document.createElement("div");
+          innerDiv.className = "pp";
+          innerDiv.innerText = generateOnePassphrase(length, passphrase_type);
+          d.appendChild(innerDiv);
+          var span = document.createElement("span");
+          span.innerText = " ";
+          d.appendChild(span);
+        }
+        e.appendChild(d);
       }
     }
-  }
 
-  return p;
-}
-
-const DESIRED_BITS_OF_ENTROPY = 128;
-const BITS_OF_ENTROPY_IN_BASE58 = Math.log(58) / Math.log(2);
-const PASSPHRASE_LEN = Math.ceil(DESIRED_BITS_OF_ENTROPY /
-                                 BITS_OF_ENTROPY_IN_BASE58);
-const SHORT_PASSPHRASE_LEN = 8;
-function generatePassphrases(id, want_short) {
-  var e = document.getElementById(id);
-  while (e.hasChildNodes()) {
-    e.removeChild(e.firstChild);
-  }
-  var passphrases = [];
-  for (i = 0; i < 8; i++) {
-    var d = document.createElement("div");
-    for (j = 0; j < 2; j++) {
-      var innerDiv = document.createElement("div");
-      innerDiv.className = "pp";
-        innerDiv.innerText = generateOnePassphrase(
-            want_short ? SHORT_PASSPHRASE_LEN : PASSPHRASE_LEN);
-      d.appendChild(innerDiv);
-      var span = document.createElement("span");
-      span.innerText = " ";
-      d.appendChild(span);
+    function generateAllPassphrases() {
+      generatePassphrases("passphrases", PASSPHRASE_LEN, PASSPHRASE);
+      generatePassphrases("passphrases-special", PASSPHRASE_LEN, PASSPHRASE_WITH_CHARACTERS);
+      generatePassphrases("short-passphrases", SHORT_PASSPHRASE_LEN, PASSPHRASE_LOWER);
+      generatePassphrases("pins", 8, PIN);
     }
-    e.appendChild(d);
-  }
-}
 
-function generateAllPassphrases() {
-  generatePassphrases("passphrases", false);
-  generatePassphrases("short-passphrases", true);
-}
+    var onload = function () {
+      var e = document.getElementById("more");
+      e.addEventListener("click", generateAllPassphrases);
+      generateAllPassphrases();
+      e.style.display = "block";
+    };
 
-var onload = function() {
-  var e = document.getElementById("more");
-  e.addEventListener("click", generateAllPassphrases);
-  generateAllPassphrases();
-  e.style.display = "block";
-};
-
-window.addEventListener("load", onload);
-</script>
+    window.addEventListener("load", onload);
+  </script>
 
 </head>
 
 <h1>Psychic Bassoon: a whole bunch of passphrases generated by your browser's
-<a href="https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues">crypto.getRandomValues()</a> function</h1>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues">crypto.getRandomValues()</a>
+  function
+</h1>
 
-  <p>All passphrases on this page are generated in JavaScript by your own
-    browser. Unless you have malware on your system, they'll never leave this
-    page. Sound suspicious to you?
-    Good! <a href="https://github.com/sowbug/psychic-bassoon">Read the
+<p>All passphrases on this page are generated in JavaScript by your own
+  browser. Unless you have malware on your system, they'll never leave this
+  page. Sound suspicious to you?
+  Good! <a href="https://github.com/sowbug/psychic-bassoon">Read the
     source</a> for yourself, satisfy yourself it's safe, and if you're
-    extra-paranoid, <a href="https://github.com/sowbug/psychic-bassoon/archive/master.zip">download
+  extra-paranoid, <a href="https://github.com/sowbug/psychic-bassoon/archive/master.zip">download
     your own local copy</a>.</p>
 
-  <p>Each of the passphrases below consists
-    of <a href="https://en.wikipedia.org/wiki/Base58">Base58 characters</a> and
-    is 22 characters long. That should get you over 128 bits of entropy (58 log
-    base 2 = about 5.85, 5.85 x 22 = 128.7), which
-    is <a href="https://en.wikipedia.org/wiki/Key_size#Symmetric_algorithm_key_lengths">more
+<p>Each of the passphrases below consists
+  of <a href="https://en.wikipedia.org/wiki/Base58">Base58 characters</a> and
+  is 22 characters long. That should get you over 128 bits of entropy (58 log
+  base 2 = about 5.85, 5.85 x 22 = 128.7), which
+  is <a href="https://en.wikipedia.org/wiki/Key_size#Symmetric_algorithm_key_lengths">more
     than enough</a> for any practical purpose.</p>
 
 <div class="pblock" id="passphrases"></div>
 
+<p>These are passphrases for systems that have <a
+    href="https://auth0.com/blog/dont-pass-on-the-new-nist-password-guidelines/">outdated</a> special-character
+  requirements.</p>
+
+<div class="pblock" id="passphrases-special"></div>
+
 <p>These are shorter phrases that work well as answers to security questions
-like favorite ice cream or best friend in grade school.</p>
+  like favorite ice cream or best friend in grade school.</p>
 
 <div class="pblock" id="short-passphrases"></div>
+
+<p>These are numbers that can be PINs.</p>
+
+<div class="pblock" id="pins"></div>
 
 <p>
   <button id="more" style="display:none">I'm Feeling Lucky</button>
 </p>
 
-<p>Other good user-friendly entropy generators
-  <ul>
-    <li><a href="https://iancoleman.io/bip39/">Ian Coleman's BIP39
-        utility</a></li>
-    <li><a href="http://world.std.com/~reinhold/diceware.html">Diceware
-    (requires dice!)</a></li>
-  </p>
+<p>Other good user-friendly entropy generators</p>
+<ul>
+  <li><a href="https://iancoleman.io/bip39/">Ian Coleman's BIP39
+      utility</a></li>
+  <li><a href="http://world.std.com/~reinhold/diceware.html">Diceware
+      (requires dice!)</a></li>
+</ul>
 
 </html>
